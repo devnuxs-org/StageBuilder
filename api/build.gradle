@@ -1,0 +1,14 @@
+plugins {
+    id 'java-library'
+}
+
+description = 'StageBuilder API - Annotations for creating stage builders'
+
+dependencies {
+    // No additional dependencies needed for annotations
+}
+
+java {
+    withSourcesJar()
+    withJavadocJar()
+}
