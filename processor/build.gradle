@@ -1,0 +1,29 @@
+plugins {
+    id 'java-library'
+}
+
+description = 'StageBuilder Processor - Annotation processor for generating stage builders'
+
+dependencies {
+    // Annotation processor dependencies
+    api project(':api')
+    
+    // For annotation processing
+    implementation 'com.google.auto.service:auto-service:1.1.1'
+    annotationProcessor 'com.google.auto.service:auto-service:1.1.1'
+    
+    // For code generation
+    implementation 'com.squareup:javapoet:1.13.0'
+    
+    // Testing
+    testImplementation 'com.google.testing.compile:compile-testing:0.21.0'
+}
+
+java {
+    withSourcesJar()
+    withJavadocJar()
+}
+
+compileJava {
+    options.annotationProcessorPath = configurations.annotationProcessor
+}

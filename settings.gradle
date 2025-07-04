@@ -1,0 +1,4 @@
+rootProject.name = 'StageBuilder'
+
+include 'api'
+include 'processor'
