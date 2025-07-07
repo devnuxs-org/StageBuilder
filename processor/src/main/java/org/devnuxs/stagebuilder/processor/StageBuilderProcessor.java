@@ -37,7 +37,7 @@ import java.util.Set;
  * and will generate fluent builder classes for them.</p>
  */
 @AutoService(Processor.class)
-@SupportedAnnotationTypes("org.devnuxs.stagebuilder.api.StageBuilder")
+@SupportedAnnotationTypes({"org.devnuxs.stagebuilder.api.StageBuilder", "org.devnuxs.stagebuilder.api.StageBuilder.Optional"})
 @SupportedSourceVersion(SourceVersion.RELEASE_17)
 public class StageBuilderProcessor extends AbstractProcessor {
     
@@ -115,7 +115,8 @@ public class StageBuilderProcessor extends AbstractProcessor {
                     RecordComponentElement recordComponent = (RecordComponentElement) enclosedElement;
                     String fieldName = recordComponent.getSimpleName().toString();
                     TypeMirror fieldType = recordComponent.asType();
-                    fields.add(new FieldInfo(fieldName, fieldType));
+                    boolean isOptional = isAnnotatedWithOptional(recordComponent);
+                    fields.add(new FieldInfo(fieldName, fieldType, isOptional));
                 }
             }
         } else {
@@ -125,12 +126,18 @@ public class StageBuilderProcessor extends AbstractProcessor {
                 for (VariableElement param : constructor.getParameters()) {
                     String fieldName = param.getSimpleName().toString();
                     TypeMirror fieldType = param.asType();
-                    fields.add(new FieldInfo(fieldName, fieldType));
+                    boolean isOptional = isAnnotatedWithOptional(param);
+                    fields.add(new FieldInfo(fieldName, fieldType, isOptional));
                 }
             }
         }
         
         return fields;
+    }
+    
+    private boolean isAnnotatedWithOptional(Element element) {
+        return element.getAnnotationMirrors().stream()
+            .anyMatch(mirror -> mirror.getAnnotationType().toString().equals("org.devnuxs.stagebuilder.api.StageBuilder.Optional"));
     }
     
     private ExecutableElement findConstructor(TypeElement element) {
@@ -150,10 +157,19 @@ public class StageBuilderProcessor extends AbstractProcessor {
     private List<TypeSpec> generateStageInterfaces(List<FieldInfo> fields, String className) {
         List<TypeSpec> interfaces = new ArrayList<>();
         
-        for (int i = 0; i < fields.size(); i++) {
-            FieldInfo field = fields.get(i);
+        // Separate required and optional fields
+        List<FieldInfo> requiredFields = fields.stream()
+            .filter(field -> !field.isOptional)
+            .toList();
+        List<FieldInfo> optionalFields = fields.stream()
+            .filter(field -> field.isOptional)
+            .toList();
+        
+        // Generate stage interfaces for required fields only
+        for (int i = 0; i < requiredFields.size(); i++) {
+            FieldInfo field = requiredFields.get(i);
             String interfaceName = capitalizeFirstLetter(field.name) + "Stage";
-            String returnType = (i == fields.size() - 1) ? "BuildStage" : capitalizeFirstLetter(fields.get(i + 1).name) + "Stage";
+            String returnType = (i == requiredFields.size() - 1) ? "BuildStage" : capitalizeFirstLetter(requiredFields.get(i + 1).name) + "Stage";
             
             TypeSpec stageInterface = TypeSpec.interfaceBuilder(interfaceName)
                 .addModifiers(Modifier.PUBLIC)
@@ -168,47 +184,73 @@ public class StageBuilderProcessor extends AbstractProcessor {
             interfaces.add(stageInterface);
         }
         
-        // Add the BuildStage interface
-        TypeSpec buildStage = TypeSpec.interfaceBuilder("BuildStage")
-            .addModifiers(Modifier.PUBLIC)
-            .addAnnotation(FunctionalInterface.class)
-            .addMethod(MethodSpec.methodBuilder("build")
-                .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
-                .returns(ClassName.get("", className))
-                .build())
-            .build();
+        // Generate the BuildStage interface with optional field methods
+        TypeSpec.Builder buildStageBuilder = TypeSpec.interfaceBuilder("BuildStage")
+            .addModifiers(Modifier.PUBLIC);
         
-        interfaces.add(buildStage);
+        // Only add @FunctionalInterface if there are no optional fields
+        if (optionalFields.isEmpty()) {
+            buildStageBuilder.addAnnotation(FunctionalInterface.class);
+        }
+        
+        // Add build method
+        buildStageBuilder.addMethod(MethodSpec.methodBuilder("build")
+            .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
+            .returns(ClassName.get("", className))
+            .build());
+        
+        // Add optional field methods
+        for (FieldInfo optionalField : optionalFields) {
+            buildStageBuilder.addMethod(MethodSpec.methodBuilder(optionalField.name)
+                .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
+                .addParameter(TypeName.get(optionalField.type), optionalField.name)
+                .returns(ClassName.get("", "BuildStage"))
+                .build());
+        }
+        
+        interfaces.add(buildStageBuilder.build());
         
         return interfaces;
     }
     
     private String getFirstStageInterfaceName(List<FieldInfo> fields) {
-        if (fields.isEmpty()) {
-            return "BuildStage";
+        // Find the first required field
+        for (FieldInfo field : fields) {
+            if (!field.isOptional) {
+                return capitalizeFirstLetter(field.name) + "Stage";
+            }
         }
-        return capitalizeFirstLetter(fields.get(0).name) + "Stage";
+        // If no required fields, go directly to BuildStage
+        return "BuildStage";
     }
     
     private TypeSpec generateBuilderInnerClass(List<FieldInfo> fields, String className, String packageName) {
         TypeSpec.Builder builder = TypeSpec.classBuilder("Builder")
             .addModifiers(Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL);
         
-        // Add all stage interfaces to the implements clause
-        for (FieldInfo field : fields) {
+        // Separate required and optional fields
+        List<FieldInfo> requiredFields = fields.stream()
+            .filter(field -> !field.isOptional)
+            .toList();
+        List<FieldInfo> optionalFields = fields.stream()
+            .filter(field -> field.isOptional)
+            .toList();
+        
+        // Add all stage interfaces to the implements clause (only required fields)
+        for (FieldInfo field : requiredFields) {
             builder.addSuperinterface(ClassName.get("", capitalizeFirstLetter(field.name) + "Stage"));
         }
         builder.addSuperinterface(ClassName.get("", "BuildStage"));
         
-        // Add fields
+        // Add fields for all fields (required and optional)
         for (FieldInfo field : fields) {
             builder.addField(FieldSpec.builder(TypeName.get(field.type), field.name, Modifier.PRIVATE).build());
         }
         
-        // Add setter methods
-        for (int i = 0; i < fields.size(); i++) {
-            FieldInfo field = fields.get(i);
-            String returnType = (i == fields.size() - 1) ? "BuildStage" : capitalizeFirstLetter(fields.get(i + 1).name) + "Stage";
+        // Add setter methods for required fields
+        for (int i = 0; i < requiredFields.size(); i++) {
+            FieldInfo field = requiredFields.get(i);
+            String returnType = (i == requiredFields.size() - 1) ? "BuildStage" : capitalizeFirstLetter(requiredFields.get(i + 1).name) + "Stage";
             
             MethodSpec setterMethod = MethodSpec.methodBuilder(field.name)
                 .addModifiers(Modifier.PUBLIC)
@@ -216,6 +258,20 @@ public class StageBuilderProcessor extends AbstractProcessor {
                 .addParameter(TypeName.get(field.type), field.name)
                 .returns(ClassName.get("", returnType))
                 .addStatement("this.$N = $N", field.name, field.name)
+                .addStatement("return this")
+                .build();
+            
+            builder.addMethod(setterMethod);
+        }
+        
+        // Add setter methods for optional fields
+        for (FieldInfo optionalField : optionalFields) {
+            MethodSpec setterMethod = MethodSpec.methodBuilder(optionalField.name)
+                .addModifiers(Modifier.PUBLIC)
+                .addAnnotation(Override.class)
+                .addParameter(TypeName.get(optionalField.type), optionalField.name)
+                .returns(ClassName.get("", "BuildStage"))
+                .addStatement("this.$N = $N", optionalField.name, optionalField.name)
                 .addStatement("return this")
                 .build();
             
@@ -258,10 +314,12 @@ public class StageBuilderProcessor extends AbstractProcessor {
     private static class FieldInfo {
         final String name;
         final TypeMirror type;
+        final boolean isOptional;
         
-        FieldInfo(String name, TypeMirror type) {
+        FieldInfo(String name, TypeMirror type, boolean isOptional) {
             this.name = name;
             this.type = type;
+            this.isOptional = isOptional;
         }
     }
 }

@@ -50,4 +50,29 @@ public class StageBuilderTest {
         // The annotation processor would be invoked at compile time
         assertNotNull(TestClass.class);
     }
+    
+    @Test
+    public void testOptionalAnnotationExists() {
+        // Verify the Optional annotation exists and can be accessed
+        assertNotNull(StageBuilder.Optional.class);
+    }
+    
+    @Test
+    public void testOptionalAnnotationRetention() {
+        // Verify the Optional annotation has SOURCE retention
+        Retention retention = StageBuilder.Optional.class.getAnnotation(Retention.class);
+        assertNotNull(retention);
+        assertEquals(RetentionPolicy.SOURCE, retention.value());
+    }
+    
+    @Test
+    public void testOptionalAnnotationTarget() {
+        // Verify the Optional annotation targets the correct elements
+        Target target = StageBuilder.Optional.class.getAnnotation(Target.class);
+        assertNotNull(target);
+        assertEquals(3, target.value().length);
+        assertTrue(java.util.Arrays.asList(target.value()).contains(ElementType.FIELD));
+        assertTrue(java.util.Arrays.asList(target.value()).contains(ElementType.PARAMETER));
+        assertTrue(java.util.Arrays.asList(target.value()).contains(ElementType.RECORD_COMPONENT));
+    }
 }
