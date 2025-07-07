@@ -15,4 +15,17 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 public @interface StageBuilder {
     // No properties for the first version as specified
+    
+    /**
+     * Marks a field as optional in the stage builder.
+     * 
+     * <p>If a field has this annotation, the strict builder for this field is not added
+     * to the stage chain. After all required fields are set, all optional fields become
+     * available and the build method can be called even if not all optional fields are set.</p>
+     */
+    @Retention(RetentionPolicy.SOURCE)
+    @Target({ElementType.FIELD, ElementType.PARAMETER, ElementType.RECORD_COMPONENT})
+    @interface Optional {
+        // No properties needed
+    }
 }
