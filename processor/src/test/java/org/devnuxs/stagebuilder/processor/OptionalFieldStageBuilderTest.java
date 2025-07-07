@@ -1,15 +1,24 @@
 package org.devnuxs.stagebuilder.processor;
 
 import com.google.testing.compile.JavaFileObjects;
+
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import static com.google.testing.compile.CompilationSubject.assertThat;
 import static com.google.testing.compile.Compiler.javac;
 
+import java.util.Locale;
+
 /**
  * Tests for optional field functionality in stage builders.
  */
 public class OptionalFieldStageBuilderTest {
+
+    @BeforeAll
+    public static void setup() {
+        Locale.setDefault(Locale.ENGLISH);
+    }
 
     @Test
     public void testOptionalFieldInClass() {

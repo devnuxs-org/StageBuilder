@@ -7,7 +7,6 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.TypeName;
-import com.squareup.javapoet.ParameterSpec;
 import org.devnuxs.stagebuilder.api.StageBuilder;
 
 import javax.annotation.processing.AbstractProcessor;
@@ -41,6 +40,9 @@ import java.util.Set;
 @SupportedSourceVersion(SourceVersion.RELEASE_21)
 public class StageBuilderProcessor extends AbstractProcessor {
     
+    private static final String BUILD_STAGE = "BuildStage";
+    private static final String STAGE = "Stage";
+
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
         // Get all elements annotated with @StageBuilder
@@ -137,7 +139,7 @@ public class StageBuilderProcessor extends AbstractProcessor {
     
     private boolean isAnnotatedWithOptional(Element element) {
         return element.getAnnotationMirrors().stream()
-            .anyMatch(mirror -> mirror.getAnnotationType().toString().equals("org.devnuxs.stagebuilder.api.StageBuilder.Optional"));
+            .anyMatch(mirror -> "org.devnuxs.stagebuilder.api.StageBuilder.Optional".equals(mirror.getAnnotationType().toString()));
     }
     
     private ExecutableElement findConstructor(TypeElement element) {
@@ -168,8 +170,8 @@ public class StageBuilderProcessor extends AbstractProcessor {
         // Generate stage interfaces for required fields only
         for (int i = 0; i < requiredFields.size(); i++) {
             FieldInfo field = requiredFields.get(i);
-            String interfaceName = capitalizeFirstLetter(field.name) + "Stage";
-            String returnType = (i == requiredFields.size() - 1) ? "BuildStage" : capitalizeFirstLetter(requiredFields.get(i + 1).name) + "Stage";
+            String interfaceName = capitalizeFirstLetter(field.name) + STAGE;
+            String returnType = (i == requiredFields.size() - 1) ? BUILD_STAGE : capitalizeFirstLetter(requiredFields.get(i + 1).name) + STAGE;
             
             TypeSpec stageInterface = TypeSpec.interfaceBuilder(interfaceName)
                 .addModifiers(Modifier.PUBLIC)
@@ -185,7 +187,7 @@ public class StageBuilderProcessor extends AbstractProcessor {
         }
         
         // Generate the BuildStage interface with optional field methods
-        TypeSpec.Builder buildStageBuilder = TypeSpec.interfaceBuilder("BuildStage")
+        TypeSpec.Builder buildStageBuilder = TypeSpec.interfaceBuilder(BUILD_STAGE)
             .addModifiers(Modifier.PUBLIC);
         
         // Only add @FunctionalInterface if there are no optional fields
@@ -204,7 +206,7 @@ public class StageBuilderProcessor extends AbstractProcessor {
             buildStageBuilder.addMethod(MethodSpec.methodBuilder(optionalField.name)
                 .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
                 .addParameter(TypeName.get(optionalField.type), optionalField.name)
-                .returns(ClassName.get("", "BuildStage"))
+                .returns(ClassName.get("", BUILD_STAGE))
                 .build());
         }
         
@@ -217,11 +219,11 @@ public class StageBuilderProcessor extends AbstractProcessor {
         // Find the first required field
         for (FieldInfo field : fields) {
             if (!field.isOptional) {
-                return capitalizeFirstLetter(field.name) + "Stage";
+                return capitalizeFirstLetter(field.name) + STAGE;
             }
         }
         // If no required fields, go directly to BuildStage
-        return "BuildStage";
+        return BUILD_STAGE;
     }
     
     private TypeSpec generateBuilderInnerClass(List<FieldInfo> fields, String className, String packageName) {
@@ -238,9 +240,9 @@ public class StageBuilderProcessor extends AbstractProcessor {
         
         // Add all stage interfaces to the implements clause (only required fields)
         for (FieldInfo field : requiredFields) {
-            builder.addSuperinterface(ClassName.get("", capitalizeFirstLetter(field.name) + "Stage"));
+            builder.addSuperinterface(ClassName.get("", capitalizeFirstLetter(field.name) + STAGE));
         }
-        builder.addSuperinterface(ClassName.get("", "BuildStage"));
+        builder.addSuperinterface(ClassName.get("", BUILD_STAGE));
         
         // Add fields for all fields (required and optional)
         for (FieldInfo field : fields) {
@@ -250,7 +252,7 @@ public class StageBuilderProcessor extends AbstractProcessor {
         // Add setter methods for required fields
         for (int i = 0; i < requiredFields.size(); i++) {
             FieldInfo field = requiredFields.get(i);
-            String returnType = (i == requiredFields.size() - 1) ? "BuildStage" : capitalizeFirstLetter(requiredFields.get(i + 1).name) + "Stage";
+            String returnType = (i == requiredFields.size() - 1) ? BUILD_STAGE : capitalizeFirstLetter(requiredFields.get(i + 1).name) + STAGE;
             
             MethodSpec setterMethod = MethodSpec.methodBuilder(field.name)
                 .addModifiers(Modifier.PUBLIC)
@@ -270,7 +272,7 @@ public class StageBuilderProcessor extends AbstractProcessor {
                 .addModifiers(Modifier.PUBLIC)
                 .addAnnotation(Override.class)
                 .addParameter(TypeName.get(optionalField.type), optionalField.name)
-                .returns(ClassName.get("", "BuildStage"))
+                .returns(ClassName.get("", BUILD_STAGE))
                 .addStatement("this.$N = $N", optionalField.name, optionalField.name)
                 .addStatement("return this")
                 .build();
