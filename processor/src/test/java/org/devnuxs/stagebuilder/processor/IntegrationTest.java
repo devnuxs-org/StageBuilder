@@ -27,8 +27,7 @@ public class IntegrationTest {
                 """));
         
         assertThat(compilation).succeededWithoutWarnings();
-        assertThat(compilation).hadNoteContaining("Found 1 element(s) annotated with @StageBuilder");
-        assertThat(compilation).hadNoteContaining("Processing @StageBuilder annotation on: PersonRecord");
+        assertThat(compilation).generatedSourceFile("test.PersonRecordStageBuilder");
     }
     
     @Test
@@ -68,8 +67,7 @@ public class IntegrationTest {
             );
         
         assertThat(compilation).succeededWithoutWarnings();
-        assertThat(compilation).hadNoteContaining("Found 2 element(s) annotated with @StageBuilder");
-        assertThat(compilation).hadNoteContaining("Processing @StageBuilder annotation on: Person");
-        assertThat(compilation).hadNoteContaining("Processing @StageBuilder annotation on: Address");
+        assertThat(compilation).generatedSourceFile("test.PersonStageBuilder");
+        assertThat(compilation).generatedSourceFile("test.AddressStageBuilder");
     }
 }
