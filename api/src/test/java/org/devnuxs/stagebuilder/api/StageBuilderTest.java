@@ -74,5 +74,6 @@ public class StageBuilderTest {
         assertTrue(java.util.Arrays.asList(target.value()).contains(ElementType.FIELD));
         assertTrue(java.util.Arrays.asList(target.value()).contains(ElementType.PARAMETER));
         assertTrue(java.util.Arrays.asList(target.value()).contains(ElementType.RECORD_COMPONENT));
+        assertFalse(java.util.Arrays.asList(target.value()).contains(ElementType.METHOD));
     }
 }

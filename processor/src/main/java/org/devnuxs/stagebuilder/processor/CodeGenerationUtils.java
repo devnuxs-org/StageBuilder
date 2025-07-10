@@ -24,9 +24,9 @@ public class CodeGenerationUtils {
      * Gets the name of the first stage interface based on the fields.
      */
     public static String getFirstStageInterfaceName(List<FieldInfo> fields) {
-        // Find the first required field
+        // Find the first required field (not optional and no default)
         for (FieldInfo field : fields) {
-            if (!field.isOptional) {
+            if (!field.isOptional && !field.hasDefault) {
                 return capitalizeFirstLetter(field.name) + STAGE;
             }
         }

@@ -30,7 +30,7 @@ import java.util.Set;
  */
 @AutoService(Processor.class)
 @SupportedAnnotationTypes({"org.devnuxs.stagebuilder.api.StageBuilder", "org.devnuxs.stagebuilder.api.StageBuilder.Optional"})
-@SupportedSourceVersion(SourceVersion.RELEASE_17)
+@SupportedSourceVersion(SourceVersion.RELEASE_21)
 public class StageBuilderProcessor extends AbstractProcessor {
     
     private final FieldExtractor fieldExtractor = new FieldExtractor();
@@ -75,14 +75,14 @@ public class StageBuilderProcessor extends AbstractProcessor {
             return;
         }
         
-        TypeSpec builderClass = createBuilderClass(builderClassName, fields, className, packageName);
+        TypeSpec builderClass = createBuilderClass(builderClassName, fields, className, packageName, element);
         
         JavaFile javaFile = JavaFile.builder(packageName, builderClass).build();
         javaFile.writeTo(processingEnv.getFiler());
     }
     
     private TypeSpec createBuilderClass(String builderClassName, List<FieldInfo> fields, 
-                                       String className, String packageName) {
+                                       String className, String packageName, TypeElement element) {
         TypeSpec.Builder builderClass = TypeSpec.classBuilder(builderClassName)
             .addModifiers(Modifier.PUBLIC, Modifier.FINAL);
         
@@ -92,7 +92,7 @@ public class StageBuilderProcessor extends AbstractProcessor {
         MethodSpec builderMethod = createBuilderMethod(fields, packageName, builderClassName);
         builderClass.addMethod(builderMethod);
         
-        TypeSpec builderInnerClass = builderClassGenerator.generateBuilderInnerClass(fields, className);
+        TypeSpec builderInnerClass = builderClassGenerator.generateBuilderInnerClass(fields, className, element);
         builderClass.addType(builderInnerClass);
         
         return builderClass.build();

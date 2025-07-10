@@ -28,4 +28,11 @@ public @interface StageBuilder {
     @interface Optional {
         // No properties needed
     }
+
+    @Retention(RetentionPolicy.SOURCE)
+    @Target({ElementType.FIELD, ElementType.PARAMETER, ElementType.RECORD_COMPONENT})
+    @interface Default {
+        String value() default ""; // Default value for the field, if applicable
+        Class<?> type() default Object.class; // Type of the field, if applicable
+    }
 }
