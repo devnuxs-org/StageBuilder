@@ -19,27 +19,27 @@ public class StageInterfaceGenerator {
      */
     public List<TypeSpec> generateStageInterfaces(List<FieldInfo> fields, String className) {
         List<TypeSpec> interfaces = new ArrayList<>();
-        
-        List<FieldInfo> requiredFields = getRequiredFields(fields);
-        List<FieldInfo> optionalFields = getOptionalFields(fields);
-        
-        interfaces.addAll(generateRequiredStageInterfaces(requiredFields));
-        interfaces.add(generateBuildStageInterface(optionalFields, className));
-        
+
+        // Required: not optional and no default
+        List<FieldInfo> requiredFields = fields.stream()
+            .filter(field -> !field.isOptional && !field.hasDefault)
+            .toList();
+        // Optional: isOptional or hasDefault
+        List<FieldInfo> optionalFields = fields.stream()
+            .filter(field -> field.isOptional || field.hasDefault)
+            .toList();
+
+        // If there are no required fields, allow all fields in BuildStage (any order)
+        if (requiredFields.isEmpty()) {
+            interfaces.add(generateBuildStageInterface(fields, className));
+        } else {
+            interfaces.addAll(generateRequiredStageInterfaces(requiredFields));
+            interfaces.add(generateBuildStageInterface(optionalFields, className));
+        }
+
         return interfaces;
     }
     
-    private List<FieldInfo> getRequiredFields(List<FieldInfo> fields) {
-        return fields.stream()
-            .filter(field -> !field.isOptional)
-            .toList();
-    }
-    
-    private List<FieldInfo> getOptionalFields(List<FieldInfo> fields) {
-        return fields.stream()
-            .filter(field -> field.isOptional)
-            .toList();
-    }
     
     private List<TypeSpec> generateRequiredStageInterfaces(List<FieldInfo> requiredFields) {
         List<TypeSpec> interfaces = new ArrayList<>();
