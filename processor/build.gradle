@@ -1,5 +1,6 @@
 plugins {
     id 'java-library'
+    id 'maven-publish'
 }
 
 description = 'StageBuilder Processor - Annotation processor for generating stage builders'
@@ -22,6 +23,51 @@ dependencies {
 java {
     withSourcesJar()
     withJavadocJar()
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from components.java
+            
+            pom {
+                name = 'StageBuilder Processor'
+                description = 'Annotation processor for generating stage builders'
+                url = 'https://github.com/devnuxs-org/StageBuilder'
+                
+                licenses {
+                    license {
+                        name = 'MIT License'
+                        url = 'https://opensource.org/licenses/MIT'
+                    }
+                }
+                
+                developers {
+                    developer {
+                        id = 'devnuxs-org'
+                        name = 'DevNuxs Organization'
+                    }
+                }
+                
+                scm {
+                    connection = 'scm:git:git://github.com/devnuxs-org/StageBuilder.git'
+                    developerConnection = 'scm:git:ssh://github.com:devnuxs-org/StageBuilder.git'
+                    url = 'https://github.com/devnuxs-org/StageBuilder'
+                }
+            }
+        }
+    }
+    
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = "https://maven.pkg.github.com/devnuxs-org/StageBuilder"
+            credentials {
+                username = System.getenv("GITHUB_USERNAME") ?: project.findProperty("gpr.user")
+                password = System.getenv("GITHUB_TOKEN") ?: project.findProperty("gpr.key")
+            }
+        }
+    }
 }
 
 compileJava {
