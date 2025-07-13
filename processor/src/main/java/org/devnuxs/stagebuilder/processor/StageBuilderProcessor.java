@@ -86,13 +86,13 @@ public class StageBuilderProcessor extends AbstractProcessor {
         TypeSpec.Builder builderClass = TypeSpec.classBuilder(builderClassName)
             .addModifiers(Modifier.PUBLIC, Modifier.FINAL);
         
-        List<TypeSpec> stageInterfaces = stageInterfaceGenerator.generateStageInterfaces(fields, className);
+        List<TypeSpec> stageInterfaces = stageInterfaceGenerator.generateStageInterfaces(fields, className, element, packageName);
         builderClass.addTypes(stageInterfaces);
         
         MethodSpec builderMethod = createBuilderMethod(fields, packageName, builderClassName);
         builderClass.addMethod(builderMethod);
         
-        TypeSpec builderInnerClass = builderClassGenerator.generateBuilderInnerClass(fields, className, element);
+        TypeSpec builderInnerClass = builderClassGenerator.generateBuilderInnerClass(fields, className, element, packageName);
         builderClass.addType(builderInnerClass);
         
         return builderClass.build();

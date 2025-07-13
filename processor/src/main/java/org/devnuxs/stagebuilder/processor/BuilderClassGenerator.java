@@ -12,6 +12,7 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.util.Elements;
 import java.util.List;
 
 /**
@@ -22,7 +23,7 @@ public class BuilderClassGenerator {
     /**
      * Generates the Builder inner class.
      */
-    public TypeSpec generateBuilderInnerClass(List<FieldInfo> fields, String className, TypeElement typeElement) {
+    public TypeSpec generateBuilderInnerClass(List<FieldInfo> fields, String className, TypeElement typeElement, String packageName) {
         TypeSpec.Builder builder = TypeSpec.classBuilder("Builder")
             .addModifiers(Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL);
 
@@ -34,7 +35,7 @@ public class BuilderClassGenerator {
         addSuperInterfaces(builder, requiredFields);
         addFields(builder, fields);
         addSetterMethods(builder, requiredFields, optionalFields);
-        addBuildMethodSmart(builder, fields, optionalFields, className, typeElement);
+        addBuildMethodSmart(builder, fields, optionalFields, className, typeElement, packageName);
         return builder.build();
     }
     
@@ -130,11 +131,13 @@ public class BuilderClassGenerator {
     /**
      * Adds a build method that uses the all-args constructor if available, otherwise falls back to no-args constructor and setters/fields.
      */
-    private void addBuildMethodSmart(TypeSpec.Builder builder, List<FieldInfo> fields, List<FieldInfo> optionalFields, String className, TypeElement typeElement) {
+    private void addBuildMethodSmart(TypeSpec.Builder builder, List<FieldInfo> fields, List<FieldInfo> optionalFields, String className, TypeElement typeElement, String packageName) {
+        ClassName targetClassName = CodeGenerationUtils.getClassName(typeElement, packageName);
+        
         MethodSpec.Builder buildMethod = MethodSpec.methodBuilder("build")
             .addModifiers(Modifier.PUBLIC)
             .addAnnotation(Override.class)
-            .returns(ClassName.get("", className));
+            .returns(targetClassName);
 
         // Always try to use all-args constructor ONLY if it matches the number of fields, otherwise use no-args constructor
         boolean useAllArgsConstructor = false;
@@ -149,10 +152,10 @@ public class BuilderClassGenerator {
                 if (i > 0) argList.append(", ");
                 argList.append("this.").append(fields.get(i).name);
             }
-            buildMethod.addStatement("$T obj = new $T($L)", ClassName.get("", className), ClassName.get("", className), argList.toString());
+            buildMethod.addStatement("$T obj = new $T($L)", targetClassName, targetClassName, argList.toString());
         } else {
             // Use no-args constructor
-            buildMethod.addStatement("$T obj = new $T()", ClassName.get("", className), ClassName.get("", className));
+            buildMethod.addStatement("$T obj = new $T()", targetClassName, targetClassName);
             // Set all fields (required, optional, default) via setters or direct access
             for (FieldInfo field : fields) {
                 String setterName = "set" + Character.toUpperCase(field.name.charAt(0)) + field.name.substring(1);

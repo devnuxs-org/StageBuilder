@@ -6,6 +6,7 @@ import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 
 import javax.lang.model.element.Modifier;
+import javax.lang.model.element.TypeElement;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,7 +18,7 @@ public class StageInterfaceGenerator {
     /**
      * Generates all stage interfaces for the given fields.
      */
-    public List<TypeSpec> generateStageInterfaces(List<FieldInfo> fields, String className) {
+    public List<TypeSpec> generateStageInterfaces(List<FieldInfo> fields, String className, TypeElement typeElement, String packageName) {
         List<TypeSpec> interfaces = new ArrayList<>();
 
         // Required: not optional and no default
@@ -31,10 +32,10 @@ public class StageInterfaceGenerator {
 
         // If there are no required fields, allow all fields in BuildStage (any order)
         if (requiredFields.isEmpty()) {
-            interfaces.add(generateBuildStageInterface(fields, className));
+            interfaces.add(generateBuildStageInterface(fields, className, typeElement, packageName));
         } else {
             interfaces.addAll(generateRequiredStageInterfaces(requiredFields));
-            interfaces.add(generateBuildStageInterface(optionalFields, className));
+            interfaces.add(generateBuildStageInterface(optionalFields, className, typeElement, packageName));
         }
 
         return interfaces;
@@ -74,7 +75,7 @@ public class StageInterfaceGenerator {
             CodeGenerationUtils.getStage();
     }
     
-    private TypeSpec generateBuildStageInterface(List<FieldInfo> optionalFields, String className) {
+    private TypeSpec generateBuildStageInterface(List<FieldInfo> optionalFields, String className, TypeElement typeElement, String packageName) {
         TypeSpec.Builder buildStageBuilder = TypeSpec.interfaceBuilder(CodeGenerationUtils.getBuildStage())
             .addModifiers(Modifier.PUBLIC);
         
@@ -82,7 +83,7 @@ public class StageInterfaceGenerator {
             buildStageBuilder.addAnnotation(FunctionalInterface.class);
         }
         
-        buildStageBuilder.addMethod(generateBuildMethod(className));
+        buildStageBuilder.addMethod(generateBuildMethod(className, typeElement, packageName));
         
         for (FieldInfo optionalField : optionalFields) {
             buildStageBuilder.addMethod(generateOptionalFieldMethod(optionalField));
@@ -91,10 +92,10 @@ public class StageInterfaceGenerator {
         return buildStageBuilder.build();
     }
     
-    private MethodSpec generateBuildMethod(String className) {
+    private MethodSpec generateBuildMethod(String className, TypeElement typeElement, String packageName) {
         return MethodSpec.methodBuilder("build")
             .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
-            .returns(ClassName.get("", className))
+            .returns(CodeGenerationUtils.getClassName(typeElement, packageName))
             .build();
     }
     
