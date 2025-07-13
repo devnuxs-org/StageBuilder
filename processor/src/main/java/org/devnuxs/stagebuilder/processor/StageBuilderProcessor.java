@@ -30,7 +30,7 @@ import java.util.Set;
  */
 @AutoService(Processor.class)
 @SupportedAnnotationTypes({"org.devnuxs.stagebuilder.api.StageBuilder", "org.devnuxs.stagebuilder.api.StageBuilder.Optional"})
-@SupportedSourceVersion(SourceVersion.RELEASE_17)
+@SupportedSourceVersion(SourceVersion.RELEASE_21)
 public class StageBuilderProcessor extends AbstractProcessor {
     
     private final FieldExtractor fieldExtractor = new FieldExtractor();
