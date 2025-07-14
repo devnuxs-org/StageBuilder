@@ -38,6 +38,9 @@ public class StageInterfaceGenerator {
             interfaces.add(generateBuildStageInterface(optionalFields, className, typeElement, packageName));
         }
 
+        // Always add FromStage interface that allows setting any field
+        interfaces.add(generateFromStageInterface(fields, className, typeElement, packageName));
+
         return interfaces;
     }
     
@@ -104,6 +107,29 @@ public class StageInterfaceGenerator {
             .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
             .addParameter(TypeName.get(optionalField.type), optionalField.name)
             .returns(ClassName.get("", CodeGenerationUtils.getBuildStage()))
+            .build();
+    }
+    
+    private TypeSpec generateFromStageInterface(List<FieldInfo> allFields, String className, TypeElement typeElement, String packageName) {
+        TypeSpec.Builder fromStageBuilder = TypeSpec.interfaceBuilder("FromStage")
+            .addModifiers(Modifier.PUBLIC);
+        
+        // Add build method
+        fromStageBuilder.addMethod(generateBuildMethod(className, typeElement, packageName));
+        
+        // Add setter methods for ALL fields (required and optional)
+        for (FieldInfo field : allFields) {
+            fromStageBuilder.addMethod(generateFromStageFieldMethod(field));
+        }
+        
+        return fromStageBuilder.build();
+    }
+    
+    private MethodSpec generateFromStageFieldMethod(FieldInfo field) {
+        return MethodSpec.methodBuilder(field.name)
+            .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
+            .addParameter(TypeName.get(field.type), field.name)
+            .returns(ClassName.get("", "FromStage"))
             .build();
     }
 }
