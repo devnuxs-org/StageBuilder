@@ -13,6 +13,7 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.util.Elements;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -39,6 +40,35 @@ public class BuilderClassGenerator {
         return builder.build();
     }
     
+    /**
+     * Generates the FromBuilder inner class that implements FromStage.
+     */
+    public TypeSpec generateFromBuilderInnerClass(List<FieldInfo> fields, String className, TypeElement typeElement, String packageName) {
+        TypeSpec.Builder builder = TypeSpec.classBuilder("FromBuilder")
+            .addModifiers(Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
+            .addSuperinterface(ClassName.get("", "FromStage"));
+
+        addFields(builder, fields);
+        addFromBuilderSetterMethods(builder, fields);
+        addBuildMethodSmart(builder, fields, getOptionalFields(fields), className, typeElement, packageName);
+        
+        return builder.build();
+    }
+    
+    private void addFromBuilderSetterMethods(TypeSpec.Builder builder, List<FieldInfo> fields) {
+        for (FieldInfo field : fields) {
+            MethodSpec setterMethod = MethodSpec.methodBuilder(field.name)
+                .addModifiers(Modifier.PUBLIC)
+                .addAnnotation(Override.class)
+                .addParameter(TypeName.get(field.type), field.name)
+                .returns(ClassName.get("", "FromStage"))
+                .addStatement("this.$N = $N", field.name, field.name)
+                .addStatement("return this")
+                .build();
+            builder.addMethod(setterMethod);
+        }
+    }
+    
     private List<FieldInfo> getRequiredFields(List<FieldInfo> fields) {
         // Required: not optional and no default
         return fields.stream()
@@ -61,6 +91,7 @@ public class BuilderClassGenerator {
             builder.addSuperinterface(ClassName.get("", interfaceName));
         }
         builder.addSuperinterface(ClassName.get("", CodeGenerationUtils.getBuildStage()));
+        // Don't implement FromStage in Builder to avoid method conflicts
     }
     
     private void addFields(TypeSpec.Builder builder, List<FieldInfo> fields) {
@@ -84,6 +115,7 @@ public class BuilderClassGenerator {
         addRequiredSetterMethods(builder, requiredFields);
         // Only optional/default fields get BuildStage setters
         addOptionalSetterMethods(builder, optionalFields);
+        // Don't add FromStage setters to avoid conflicts
     }
     
     private void addRequiredSetterMethods(TypeSpec.Builder builder, List<FieldInfo> requiredFields) {

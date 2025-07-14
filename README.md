@@ -83,3 +83,34 @@ public class User {
 }
 ```
 In this example, the builder will recognize the `@StageBuilder.Optional` annotation on the private field `nickname` (because there is a public setter), and will allow you to skip setting it. The builder will call the setter for `nickname` if it is set during the build process.
+
+#### Example 4: Creating Variants with the `from()` Builder Method
+```java
+@StageBuilder
+public record Person(String name, int age, @StageBuilder.Optional String email) {}
+
+// Create an original object
+Person original = PersonStageBuilder.builder()
+    .name("John Doe")
+    .age(30)
+    .build();
+
+// Create a new variant with modified fields using from()
+Person older = PersonStageBuilder.from(original)
+    .age(31)
+    .build();
+
+// Create another variant with additional field
+Person withEmail = PersonStageBuilder.from(original)
+    .email("john.doe@example.com")
+    .build();
+
+// Modify multiple fields at once
+Person updated = PersonStageBuilder.from(original)
+    .name("John Smith")
+    .age(32)
+    .email("john.smith@example.com")
+    .build();
+```
+
+The `from()` method is useful when you want to create new objects that are similar to existing ones with just a few field changes, avoiding the need to manually specify all field values again.
