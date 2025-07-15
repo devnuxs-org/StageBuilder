@@ -29,10 +29,27 @@ public @interface StageBuilder {
         // No properties needed
     }
 
+    /**
+     * Marks a field as having a default value in the stage builder.
+     * 
+     * <p>Fields with this annotation can specify default values that will be used
+     * when the field is not explicitly set during the building process.</p>
+     */
     @Retention(RetentionPolicy.SOURCE)
     @Target({ElementType.FIELD, ElementType.PARAMETER, ElementType.RECORD_COMPONENT})
     @interface Default {
+        /**
+         * The default value for the field as a string representation.
+         * 
+         * @return the default value for the field, if applicable
+         */
         String value() default ""; // Default value for the field, if applicable
+        
+        /**
+         * The type of the field for proper type handling.
+         * 
+         * @return the type of the field, if applicable
+         */
         Class<?> type() default Object.class; // Type of the field, if applicable
     }
 }

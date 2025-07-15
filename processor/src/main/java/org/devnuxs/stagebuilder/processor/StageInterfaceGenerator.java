@@ -17,6 +17,12 @@ public class StageInterfaceGenerator {
     
     /**
      * Generates all stage interfaces for the given fields.
+     * 
+     * @param fields the list of fields to create stage interfaces for
+     * @param className the name of the class being built
+     * @param typeElement the type element of the class being built
+     * @param packageName the package name
+     * @return a list of TypeSpec for all stage interfaces
      */
     public List<TypeSpec> generateStageInterfaces(List<FieldInfo> fields, String className, TypeElement typeElement, String packageName) {
         List<TypeSpec> interfaces = new ArrayList<>();
