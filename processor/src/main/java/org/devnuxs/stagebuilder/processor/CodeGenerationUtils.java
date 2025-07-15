@@ -17,6 +17,9 @@ public class CodeGenerationUtils {
     
     /**
      * Capitalizes the first letter of a string.
+     * 
+     * @param str the string to capitalize
+     * @return the string with first letter capitalized, or the original string if null or empty
      */
     public static String capitalizeFirstLetter(String str) {
         if (str == null || str.isEmpty()) {
@@ -27,6 +30,9 @@ public class CodeGenerationUtils {
     
     /**
      * Gets the name of the first stage interface based on the fields.
+     * 
+     * @param fields the list of fields to analyze
+     * @return the name of the first stage interface or BuildStage if no required fields
      */
     public static String getFirstStageInterfaceName(List<FieldInfo> fields) {
         // Find the first required field (not optional and no default)
@@ -41,6 +47,8 @@ public class CodeGenerationUtils {
     
     /**
      * Gets the BUILD_STAGE constant.
+     * 
+     * @return the BUILD_STAGE constant string
      */
     public static String getBuildStage() {
         return BUILD_STAGE;
@@ -48,6 +56,8 @@ public class CodeGenerationUtils {
     
     /**
      * Gets the STAGE constant.
+     * 
+     * @return the STAGE constant string
      */
     public static String getStage() {
         return STAGE;
@@ -55,6 +65,10 @@ public class CodeGenerationUtils {
     
     /**
      * Creates a ClassName for the given TypeElement, properly handling nested classes.
+     * 
+     * @param typeElement the type element to create a class name for
+     * @param packageName the package name
+     * @return a ClassName for the type element
      */
     public static ClassName getClassName(TypeElement typeElement, String packageName) {
         List<String> enclosingClassNames = new ArrayList<>();

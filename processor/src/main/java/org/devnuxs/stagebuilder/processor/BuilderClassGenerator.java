@@ -23,6 +23,12 @@ public class BuilderClassGenerator {
 
     /**
      * Generates the Builder inner class.
+     * 
+     * @param fields the list of fields to include in the builder
+     * @param className the name of the class being built
+     * @param typeElement the type element of the class being built
+     * @param packageName the package name
+     * @return the TypeSpec for the Builder inner class
      */
     public TypeSpec generateBuilderInnerClass(List<FieldInfo> fields, String className, TypeElement typeElement, String packageName) {
         TypeSpec.Builder builder = TypeSpec.classBuilder("Builder")
@@ -42,6 +48,12 @@ public class BuilderClassGenerator {
     
     /**
      * Generates the FromBuilder inner class that implements FromStage.
+     * 
+     * @param fields the list of fields to include in the builder
+     * @param className the name of the class being built
+     * @param typeElement the type element of the class being built
+     * @param packageName the package name
+     * @return the TypeSpec for the FromBuilder inner class
      */
     public TypeSpec generateFromBuilderInnerClass(List<FieldInfo> fields, String className, TypeElement typeElement, String packageName) {
         TypeSpec.Builder builder = TypeSpec.classBuilder("FromBuilder")

@@ -18,6 +18,9 @@ public class FieldExtractor {
     
     /**
      * Extracts field information from a TypeElement (class or record).
+     * 
+     * @param element the type element to extract fields from
+     * @return a list of field information for stage builder generation
      */
     public List<FieldInfo> extractFields(TypeElement element) {
         List<FieldInfo> fields = new ArrayList<>();
