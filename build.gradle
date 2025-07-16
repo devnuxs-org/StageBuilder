@@ -63,7 +63,7 @@ jreleaser {
                     javadocJar = false
                     verifyPom = false
                     applyMavenCentralRules = false
-                    stagingRepository('build/staging-deploy')
+                    stagingRepository("${System.getProperty('user.home')}/.m2/repository")
                     connectTimeout = 20
                     readTimeout = 60
                     namespace = 'org.devnuxs'
