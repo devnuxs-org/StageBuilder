@@ -1,11 +1,12 @@
 plugins {
     id 'java'
     id 'org.jreleaser' version '1.14.0'
+    id 'pl.allegro.tech.build.axion-release' version '1.18.14'
 }
 
 allprojects {
     group = 'org.devnuxs'
-    version = '1.0.0'
+    version = scmVersion.version
 }
 
 subprojects {
@@ -27,6 +28,22 @@ subprojects {
     
     test {
         useJUnitPlatform()
+    }
+}
+
+scmVersion {
+    tag {
+        prefix = 'v'
+        versionSeparator = ''
+    }
+    
+    versionCreator 'versionWithBranch'
+    
+    branchVersionCreator = ['main': 'simple']
+    
+    checks {
+        uncommittedChanges = false
+        aheadOfRemote = false
     }
 }
 
