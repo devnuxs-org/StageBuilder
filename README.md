@@ -9,6 +9,24 @@ A simple stage builder annotation processing library for Pojo Classes and Record
 | `@StageBuilder.Default`     | Field, Constructor Param, Record Component   | Marks a field, constructor parameter, or record component as having a default value. The generated builder allows this field to be omitted; if not set, the default value is used during object construction. |
 | `@StageBuilder.Optional`    | Field, Constructor Param, Record Component   | Marks a field, constructor parameter, or record component as optional. The generated builder allows this field to be skipped; if not set, it will be `null` (for reference types) or the Java default (for primitives). |
 
+## Development
+
+### Versioning
+
+This project uses the [Axion Release Plugin](https://axion-release-plugin.readthedocs.io/en/latest/) for automatic version management. Both the `api` and `processor` modules are always released with the same version.
+
+**Available version commands:**
+- `./gradlew currentVersion` - Display the current version
+- `./gradlew release` - Create and push a release tag
+- `./gradlew markNextVersion -Prelease.version=X.Y.Z` - Mark the next version to be released
+
+### Building
+
+To build the project:
+```bash
+./gradlew build
+```
+
 ## Get Started
 
 ## Get Started
