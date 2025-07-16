@@ -1,5 +1,6 @@
 plugins {
     id 'java'
+    id 'org.jreleaser' version '1.14.0'
 }
 
 allprojects {
@@ -26,5 +27,50 @@ subprojects {
     
     test {
         useJUnitPlatform()
+    }
+}
+
+jreleaser {
+    project {
+        name = 'StageBuilder'
+        description = 'A Java annotation processor for creating stage builders'
+        longDescription = 'StageBuilder provides annotations and an annotation processor to automatically generate stage builder patterns for your Java classes, improving API usability and reducing boilerplate code.'
+        website = 'https://github.com/devnuxs-org/StageBuilder'
+        authors = ['DevNuxs Organization']
+        license = 'MIT'
+        copyright = '2024 DevNuxs Organization'
+    }
+    
+    release {
+        github {
+            token = '__USE_ENVIRONMENT_VARIABLE__'
+        }
+    }
+    
+    deploy {
+        maven {
+            mavenCentral {
+                sonatype {
+                    active = 'ALWAYS'
+                    url = 'https://central.sonatype.com/api/v1/publisher'
+                    snapshotSupported = true
+                    username = '__USE_ENVIRONMENT_VARIABLE__'
+                    password = '__USE_ENVIRONMENT_VARIABLE__'
+                    authorization = 'BEARER'
+                    sign = false
+                    checksums = false
+                    sourceJar = false
+                    javadocJar = false
+                    verifyPom = false
+                    applyMavenCentralRules = false
+                    stagingRepository('build/staging-deploy')
+                    connectTimeout = 20
+                    readTimeout = 60
+                    namespace = 'org.devnuxs'
+                    retryDelay = 20
+                    maxRetries = 100
+                }
+            }
+        }
     }
 }
